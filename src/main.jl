@@ -15,17 +15,49 @@ include("glouton_descent.jl")
 
 # Loading a SPP instance
 println("\nLoading...")
-fname = "Data/pb_500rnd0100.dat"
+fname = "../Data/pb_100rnd0100.dat"
 C, A = loadSPP(fname)
-@show C
-#@show A
+# @show C
+# #@show A
 
-grd = greedy(C, A)
-println("greedy = ",grd, ", z= ", z(grd, C))
+grd, zg = greedy2(C, A)
+println("greedy = ",grd, ", z= ", zg)
 
 dea, v=deepest_d(grd)
 println("deapest = ", dea, ", value = ", v)
 
+
+# function utility_total(A, C)
+#     #retourne la liste des utilités 
+#         n = length(C) # Nombre de variables
+        
+#         # Initialiser une liste des utilités
+#         U = zeros(n)
+        
+#         # Calculer l'utilité pour chaque variable (colonne de A)
+#         for i in 1:n
+#             # L'utilité est C[i] divisé par la somme des contraintes de la colonne i
+#             U[i] = C[i] /sum(A[: , i]) 
+#         end
+        
+#     return(U)
+# end
+
+#println(utility_total(A, C))
+
+# =========================================================================== #
+
+# Solving a SPP instance with GLPK
+# println("\nSolving...")
+# solverSelected = GLPK.Optimizer
+# spp = setSPP(C, A)
+
+# set_optimizer(spp, solverSelected)
+# optimize!(spp)
+
+# # Displaying the results
+# println("z = ", objective_value(spp))
+# print("x = "); println(value.(spp[:x]))
 
 # # Solving a SPP instance with GLPK
 # println("\nSolving...")
@@ -38,8 +70,6 @@ println("deapest = ", dea, ", value = ", v)
 # # Displaying the results
 # println("z = ", objective_value(spp))
 # print("x = "); println(value.(spp[:x]))
-
-# =========================================================================== #
 
 # Collecting the names of instances to solve
 # println("\nCollecting...")

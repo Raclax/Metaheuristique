@@ -1,37 +1,13 @@
 include("loadSPP.jl")
-fname = "Data/pb_500rnd0100.dat"
+fname = "../Data/pb_100rnd0100.dat"
 C, A = loadSPP(fname)
 
 C = Int.(C)
 A = Int.(A)
 
-function greedy(C, A)::Vector{Int}
-    # Initialiser l'ensemble solution S à vide
-    S = zeros(Int,length(C))
-    ivar = [i for i in 1:length(C)]
-    println("Construction gloutonne evaluée d'une solution admissible")
-    # Boucle tant que C n'est pas vide
-    while !isempty(C)
-        println("ivar : ", ivar)
-        println("C : ", C)
-        # Sélectionner l'indice de l'élément e avec la plus grande utilité dans C
-        ie = utility(A, C) 
-        println("jselect : ", ie)
-        # Incorporer l'élément e dans la solution S
-        S[ivar[ie]]=1
-        @show S
-        # Mettre à jour l'ensemble des candidats en supprimant les éléments en conflit
-        A, C, ivar = conflict(A, C, ie, ivar)
-        println("_________")
-    end
 
-    # Retourner l'ensemble solution S
-    return S
-end
-
-function utility(A, C)
+function utility(A, C, n)
 #retourne l'indice de l'élement de l'indice dans C de l'élément ayant la plus grande utilité  
-    n = length(C) # Nombre de variables
     
     # Initialiser une liste des utilités
     U = zeros(n)
@@ -42,37 +18,81 @@ function utility(A, C)
         U[i] = C[i] /sum(A[: , i]) 
     end
     
-    println("U : ", U)
-    return argmax(U)
+    # println("U : ", U)
+    return U
 end
 
-function conflict(A, C, ie, ivar)
-    # Mettre à jour l'ensemble des candidats en supprimant les éléments en conflit : 
-    # Dans A : la colonne correspondant à l'element d'indice ie, ainsi que toutes les colonnes ayant des 1 sur la meme ligne que ie en a
-    # Dans C : l'element ie ainsi que tous les elements dont les colonnes ont ete supprime
-    
-    # Identifier la colonne à supprimer
-    col_to_remove = A[:, ie]
-    # Trouver les lignes où la colonne a des 1
-    rows_with_ones = findall(col_to_remove .== 1)
 
-    # Identifier les colonnes à supprimer
-    columns_to_remove = []
-    for row in rows_with_ones
-        columns_with_ones = findall(A[row, :] .== 1)
-        for col in columns_with_ones
-            push!(columns_to_remove, col[1])  # Ajouter les colonnes à supprimer
+function greedy2(C, A)
+    m, n = size(A)
+    #println("m = ", m, " n = ", n)
+
+    # Trier les indices en fonction des ratios
+    u = sortperm(utility(A, C, n), rev=true)
+
+    # Initialiser le vecteur x avec des zéros
+    x = zeros(Int, n)
+
+    # Ajouter des 1 aux bons indices
+    for un in u
+        #println("un = ", nounde)
+        feasible = true
+        for i in 1:m
+            if A[i, un] == 1
+                for j in 1  :n
+                    if x[j] == 1 && A[i, j] == 1
+                        feasible = false
+                        break
+                    end
+                end
+            end
+            if !feasible
+                break
+            end
+        end
+        if feasible
+            x[un] = 1
         end
     end
+    #affiche x avec ses indices
     
-    # Supprimer la colonne correspondante à ie et toutes les colonnes à supprimer
-    A = A[:, setdiff(1:size(A, 2), [ie; collect(columns_to_remove)])]
+    #for (index, value) in enumerate(x)
+    #    println("Index: $index, Valeur: $value")
+    #end
+    z = sum(C[i] * x[i] for i in 1:n)
+    #println(res)
+    return x, z
+end
+
+
+# function conflict(A, C, ie, ivar)
+#     # Mettre à jour l'ensemble des candidats en supprimant les éléments en conflit : 
+#     # Dans A : la colonne correspondant à l'element d'indice ie, ainsi que toutes les colonnes ayant des 1 sur la meme ligne que ie en a
+#     # Dans C : l'element ie ainsi que tous les elements dont les colonnes ont ete supprime
+    
+#     # Identifier la colonne à supprimer
+#     col_to_remove = A[:, ie]
+#     # Trouver les lignes où la colonne a des 1
+#     rows_with_ones = findall(col_to_remove .== 1)
+
+#     # Identifier les colonnes à supprimer
+#     columns_to_remove = []
+#     for row in rows_with_ones
+#         columns_with_ones = findall(A[row, :] .== 1)
+#         for col in columns_with_ones
+#             push!(columns_to_remove, col[1])  # Ajouter les colonnes à supprimer
+#         end
+#     end
+    
+#     # Supprimer la colonne correspondante à ie et toutes les colonnes à supprimer
+#     A = A[:, setdiff(1:size(A, 2), [ie; collect(columns_to_remove)])]
         
 
-    remaining_indices = setdiff(1:length(C), collect(columns_to_remove))
-    C = C[remaining_indices]
-    ivar = ivar[remaining_indices]  # Corriger ivar après suppression
+#     remaining_indices = setdiff(1:length(C), collect(columns_to_remove))
+#     C = C[remaining_indices]
+#     ivar = ivar[remaining_indices]  # Corriger ivar après suppression
     
-    return A, C, ivar
-end
+#     return A, C, ivar
+# end
+
 
