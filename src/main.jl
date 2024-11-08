@@ -10,21 +10,25 @@ include("setSPP.jl")
 include("getfname.jl")
 include("glouton_const2.jl")
 include("glouton_descent.jl")
+include("GRASP.jl")
 
 # =========================================================================== #
 
 # Loading a SPP instance
-println("\nLoading...")
+#println("\nLoading...")
 fname = "../Data/pb_100rnd0100.dat"
 C, A = loadSPP(fname)
 # @show C
 # #@show A
 
-grd, zg = greedy2(C, A)
-println("greedy = ",grd, ", z= ", zg)
+# grd, zg = greedy2(C, A)
+# println("greedy = ",grd, ", z= ", zg)
 
-dea, v=deepest_d(grd)
-println("deapest = ", dea, ", value = ", v)
+# dea, v=deepest_d(grd)
+# println("deapest = ", dea, ", value = ", v)
+
+g = grasp(A, C, 0.7)
+println(g, z(g, C))
 
 
 # function utility_total(A, C)
