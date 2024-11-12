@@ -27,8 +27,8 @@ C, A = loadSPP(fname)
 # dea, v=deepest_d(grd)
 # println("deapest = ", dea, ", value = ", v)
 
-g = grasp(A, C, 0.7)
-println(g, z(g, C))
+g, zg = grasp(A, C, 0.7)
+println(g, zg)
 
 
 # function utility_total(A, C)
