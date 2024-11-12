@@ -12,6 +12,7 @@ function grasp(A, C, alpha, repeat=10)
     best_valeur = 0
     for i in 1:repeat
         S = grconst(A, C, alpha)
+        #v=z(S,C)
         S, v = deepest_d(S)
         if v > best_valeur
             best = S
@@ -28,6 +29,7 @@ function grconst(A, C, alpha)
     utility_values = utility(A,C, length(C))
     umin = minimum(utility_values)
     ulim = umin + alpha*(maximum(utility_values) - umin)
+    
     # cand=[]
     # for i=1:n
     #     push!(cand, i)
@@ -84,24 +86,22 @@ end
 
 
 function deepest_d(solution)
-    t=0
     best = solution
-    #println("Type de best avant appel à z: ", typeof(best))
     best_valeur = z(best, C)
+    ones = findall(x -> x == 1, solution)
+    zeros = findall(x -> x == 0, solution)
     # en 2-1
     new=true
     while new
         #println("Début-recherche dans un voisinage avec mouvement 2-1")
         new=false
 
-        voisins, idx = echange_xx(2, 1, best)
-
-        for voisin in voisins
-
-            # println("ancien meilleur = ", best_valeur)
-            #println("Type de voisin dd 2-1: ", typeof(voisin))
-            best = voisin
-            best_valeur = z(voisin, C)
+        x, zx = echange_xx(2, 1, best, zeros, ones)
+        if zx > best_valeur
+            best = x
+            best_valeur = zx
+            ones = findall(x -> x == 1, best)
+            zeros = findall(x -> x == 0, best)
 
             #println("nouveau meilleur = ", best_valeur)
             new=true
@@ -119,18 +119,19 @@ function deepest_d(solution)
     while new
         #println("Début-recherche dans un voisinage avec mouvement 1-1")
         new=false
-        voisins, idx= echange_xx(1, 1, best)
-        # println("Il y en a ",length(voisins), " voisins")
 
-        for voisin in voisins
+        x, zx = echange_xx(1, 1, best, zeros, ones)
+        if zx > best_valeur
+            best = x
+            best_valeur = zx
+            ones = findall(x -> x == 1, best)
+            zeros = findall(x -> x == 0, best)
 
-            # println("ancien meilleur = ", best_valeur)
-            #println("Type de voisin dd 1-1: ", typeof(voisin))
-            best = voisin
-            best_valeur = z(voisin, C)
             #println("nouveau meilleur = ", best_valeur)
             new=true
         end
+
+        
     #println("Fin--recherche dans un voisinage avce mouvement 1-1")           
     end
 
@@ -143,15 +144,16 @@ function deepest_d(solution)
     while new
         #println("Début-recherche dans un voisinage avec mouvement 0-1")
         new=false
-        voisins, idx= echange_xx(0, 1, best)
+        voisins, idx= echange_xx(0, 1, best, zeros, ones)
         # println("Il y en a ",length(voisins), " voisins")
 
-        for voisin in voisins
+        x, zx = echange_xx(0, 1, best)
+        if zx > best_valeur
+            best = x
+            best_valeur = zx
+            ones = findall(x -> x == 1, best)
+            zeros = findall(x -> x == 0, best)
 
-            # println("ancien meilleur = ", best_valeur)
-            #println("Type de voisin dd 0-1: ", typeof(voisin))
-            best = voisin
-            best_valeur = z(voisin, C)
             #println("nouveau meilleur = ", best_valeur)
             new=true
         end
@@ -165,21 +167,22 @@ function deepest_d(solution)
     return best, best_valeur
 end 
 
-function echange_xx(k, p, solution)
-    l = [] 
-    idx = []
-    ones = findall(x -> x == 1, solution)
-    zeros = findall(x -> x == 0, solution)
+function echange_xx(k, p, solution, zeros, ones)
+    # l = Vector{Vector{Int}}() 
+    # idx = Vector{Tuple{Vector{Int}, Vector{Int}}}()
+    valactuelle = z(solution, C)
 
     if k == 0
-
         for j in zeros
             voisin = copy(solution)
-            voisin[j] = 1  
-            #println("Type de voisin kp 0-1: ", typeof(voisin))
-            if valide(voisin, A) && z(voisin, C) > z(solution, C)
-                push!(l, voisin)
-                push!(idx, ([], [j]))
+            voisin[j] = 1 
+
+            voisin_value = z(voisin, C)
+            if voisin_value > valactuelle
+                if valide(voisin, A)
+                    solution = voisin
+                    valactuelle = voisin_value
+                end
             end
         end
         
@@ -191,10 +194,13 @@ function echange_xx(k, p, solution)
                 voisin[i] = 0  
                 voisin[j] = 1 
 
-                #println("Type de voisin kp 1-1: ", typeof(voisin))
-                if valide(voisin, A) && z(voisin, C) > z(solution, C)
-                    push!(l, voisin)
-                    push!(idx, ([i], [j]))
+            
+                voisin_value = z(voisin, C)
+                if voisin_value > valactuelle
+                    if valide(voisin, A)
+                        solution = voisin
+                        valactuelle = voisin_value
+                    end
                 end
             end      
         end
@@ -208,16 +214,18 @@ function echange_xx(k, p, solution)
                     voisin[ones[i]] = 0 
                     voisin[ones[k_idx]] = 0  
                     voisin[j] = 1  
-                    #println("Type de voisin kp 2-1: ", typeof(voisin))
 
-                    if valide(voisin, A) && z(voisin, C) >= z(solution, C)
-                        push!(l, voisin)
-                        push!(idx, ([ones[i], ones[k_idx]], [j]))
+                    voisin_value = z(voisin, C)
+                    if voisin_value > valactuelle
+                        if valide(voisin, A)
+                            solution = voisin
+                            valactuelle = voisin_value
+                        end
                     end
                 end
             end
         end
 
     end
-    return l, idx
+    return solution, valactuelle
 end

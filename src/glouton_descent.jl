@@ -20,28 +20,24 @@ end
 
 
 function deepest_d(solution)
-    t=0
     best = solution
     best_valeur = z(best, C)
     # en 2-1
     new=true
     while new
-        println("Début-recherche dans un voisinage avec mouvement 2-1")
+        #println("Début-recherche dans un voisinage avec mouvement 2-1")
         new=false
 
-        voisins, idx = echange_xx(2, 1, best)
+        x, zx = echange_xx(2, 1, best)
+        if zx > best_valeur
+            best = x
+            best_valeur = zx
 
-        for voisin in voisins
-
-            # println("ancien meilleur = ", best_valeur)
-            best = voisin
-            best_valeur = z(voisin, C)
-
-            println("nouveau meilleur = ", best_valeur)
+            #println("nouveau meilleur = ", best_valeur)
             new=true
         end
 
-    println("Fin--recherche dans un voisinage avce mouvement 2-1")
+    #println("Fin--recherche dans un voisinage avce mouvement 2-1")
     end
 
     println("______________")
@@ -51,20 +47,20 @@ function deepest_d(solution)
     new=true
 
     while new
-        println("Début-recherche dans un voisinage avec mouvement 1-1")
+        #println("Début-recherche dans un voisinage avec mouvement 1-1")
         new=false
-        voisins, idx= echange_xx(1, 1, best)
-        # println("Il y en a ",length(voisins), " voisins")
 
-        for voisin in voisins
+        x, zx = echange_xx(1, 1, best)
+        if zx > best_valeur
+            best = x
+            best_valeur = zx
 
-            # println("ancien meilleur = ", best_valeur)
-            best = voisin
-            best_valeur = z(voisin, C)
-            println("nouveau meilleur = ", best_valeur)
+            #println("nouveau meilleur = ", best_valeur)
             new=true
         end
-    println("Fin--recherche dans un voisinage avce mouvement 1-1")           
+
+        
+    #println("Fin--recherche dans un voisinage avce mouvement 1-1")           
     end
 
     println("______________")
@@ -74,20 +70,20 @@ function deepest_d(solution)
     new=true
 
     while new
-        println("Début-recherche dans un voisinage avec mouvement 0-1")
+        #println("Début-recherche dans un voisinage avec mouvement 0-1")
         new=false
         voisins, idx= echange_xx(0, 1, best)
         # println("Il y en a ",length(voisins), " voisins")
 
-        for voisin in voisins
+        x, zx = echange_xx(0, 1, best)
+        if zx > best_valeur
+            best = x
+            best_valeur = zx
 
-            # println("ancien meilleur = ", best_valeur)
-            best = voisin
-            best_valeur = z(voisin, C)
-            println("nouveau meilleur = ", best_valeur)
+            #println("nouveau meilleur = ", best_valeur)
             new=true
         end
-    println("Fin--recherche dans un voisinage avce mouvement 0-1")
+    #println("Fin--recherche dans un voisinage avce mouvement 0-1")
     end
 
     println("______________")
@@ -100,20 +96,23 @@ end
 
 
 function echange_xx(k, p, solution)
-    l = [] 
-    idx = []
+    # l = Vector{Vector{Int}}() 
+    # idx = Vector{Tuple{Vector{Int}, Vector{Int}}}()
     ones = findall(x -> x == 1, solution)
     zeros = findall(x -> x == 0, solution)
+    valactuelle = z(solution, C)
 
     if k == 0
-
         for j in zeros
             voisin = copy(solution)
             voisin[j] = 1  
 
-            if valide(voisin, A) && z(voisin, C) > z(solution, C)
-                push!(l, voisin)
-                push!(idx, ([], [j]))
+            if valide(voisin, A) 
+                voisin_value = z(voisin, C)
+                if voisin_value > valactuelle
+                    solution = voisin
+                    valactuelle = voisin_value
+                end
             end
         end
         
@@ -125,9 +124,12 @@ function echange_xx(k, p, solution)
                 voisin[i] = 0  
                 voisin[j] = 1 
 
-                if valide(voisin, A) && z(voisin, C) > z(solution, C)
-                    push!(l, voisin)
-                    push!(idx, ([i], [j]))
+                if valide(voisin, A)
+                    voisin_value = z(voisin, C)
+                    if voisin_value > valactuelle
+                        solution = voisin
+                        valactuelle = voisin_value
+                    end
                 end
             end      
         end
@@ -142,14 +144,17 @@ function echange_xx(k, p, solution)
                     voisin[ones[k_idx]] = 0  
                     voisin[j] = 1  
 
-                    if valide(voisin, A) && z(voisin, C) >= z(solution, C)
-                        push!(l, voisin)
-                        push!(idx, ([ones[i], ones[k_idx]], [j]))
+                    if valide(voisin, A)
+                        voisin_value = z(voisin, C)
+                        if voisin_value >= valactuelle
+                            solution = voisin
+                            valactuelle = voisin_value
+                        end
                     end
                 end
             end
         end
 
     end
-    return l, idx
+    return solution, valactuelle
 end

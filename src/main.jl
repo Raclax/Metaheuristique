@@ -2,7 +2,7 @@
 # Compliant julia 1.x
 
 # Using the following packages
-using JuMP, GLPK
+# using JuMP, GLPK
 using LinearAlgebra
 
 include("loadSPP.jl")
@@ -28,7 +28,7 @@ C, A = loadSPP(fname)
 # println("deapest = ", dea, ", value = ", v)
 
 g, zg = grasp(A, C, 0.7)
-println(g, zg)
+#println(g, zg)
 
 
 # function utility_total(A, C)
