@@ -6,10 +6,10 @@
 using LinearAlgebra
 
 include("loadSPP.jl")
-include("setSPP.jl")
-include("getfname.jl")
-include("glouton_const2.jl")
-include("glouton_descent.jl")
+#include("setSPP.jl")
+# include("getfname.jl")
+# include("glouton_const2.jl")
+# include("glouton_descent.jl")
 include("GRASP.jl")
 
 # =========================================================================== #
@@ -26,8 +26,8 @@ C, A = loadSPP(fname)
 
 # dea, v=deepest_d(grd)
 # println("deapest = ", dea, ", value = ", v)
-
-g, zg = grasp(A, C, 0.7)
+#g, zg = grasp(A, C, 0.7)
+s,v = ReactiveGrasp(A, C, 10,100,10)
 #println(g, zg)
 
 
