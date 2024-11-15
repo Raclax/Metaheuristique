@@ -3,46 +3,6 @@ fname = "../Data/pb_100rnd0100.dat"
 C, A = loadSPP(fname)
 m, n = size(A)
 
-population_size = 100
-generations = 1000
-mutation_rate = 0.01
-crossover_rate = 0.7
-
-best_solution, best_value = genetic_algorithm(A, C, population_size, generations, mutation_rate, crossover_rate)
-
-
-
-function genetic_algorithm(A, C, population_size, generations, mutation_rate, crossover_rate)
-    population = initialize_population(population_size, size(A, 2))
-
-    best_solution = nothing
-    best_value = -Inf
-
-    for gen in 1:generations
-        fitness_values = evaluate_population(population)
-
-        p1 = selection(population, fitness_values)
-        p2 = selection(population, fitness_values)
-
-        enfantA, enfantB = crossover(p1, p2, crossover_rate)
-
-        
-
-        mutA = mutation(enfantA, mutation_rate)
-        mutB = mutation(enfantB, mutation_rate)
-        population = mutA, mutB
-
-        current_best_value, current_best_solution = IdentifieMeilleur(population)
-        if current_best_value > best_value
-            best_value = current_best_value
-            best_solution = current_best_solution
-        end
-    end
-
-    return best_solution, best_value
-end
-
-# ----------------------------------------------------------------------------------------------------
 
 function initialize_population(population_size, chromosome_length)
     return [rand(Bool, chromosome_length) for _ in 1:population_size]
@@ -105,11 +65,18 @@ end
 # ----------------------------------------------------------------------------------------------------
 
 # Selectionne un individu survivant entre deux individus
-function survivantEnfant( carte, e , em )
-
-    # A ECRIRE
-
-    return e
+function survivantEnfant(enfMut)
+    if valide(enfMut)
+        return enfMut
+    else
+        for i in findall(x -> x == 1, enfMut)
+            enfMut[i] = 0
+            if valide(enfMut)
+                return enfMut
+            end
+            enfMut[i] = 1
+        end
+    end
 end
 
 # ----------------------------------------------------------------------------------------------------
@@ -141,9 +108,11 @@ function IdentifieMeilleur(population)
     best_solution = nothing
     for chromosome in population
         value = fitness(chromosome)
-        if value > best_value && valide(chromosome, A)
-            best_value = value
-            best_solution = chromosome
+        if value > best_value
+            if valide(chromosome)
+                best_value = value
+                best_solution = chromosome
+            end
         end
     end
     return best_value, best_solution
@@ -151,7 +120,7 @@ end
 
 # ----------------------------------------------------------------------------------------------------
 
-function valide(sol, A)
+function valide(sol)
     colonnes = findall(x -> x == 1, sol)
     cidx = [colonne[1] for colonne in colonnes]
 
@@ -159,4 +128,44 @@ function valide(sol, A)
         return false
     end
     return true
+end 
+
+# ----------------------------------------------------------------------------------------------------
+
+population_size = 100
+generations = 1000
+mutation_rate = 0.01
+crossover_rate = 0.7
+
+best_solution, best_value = genetic_algorithm(A, C, population_size, generations, mutation_rate, crossover_rate)
+
+
+
+function genetic_algorithm(A, C, population_size, generations, mutation_rate, crossover_rate)
+    population = initialize_population(population_size, size(A, 2))
+
+    # best_solution = nothing
+    # best_value = -Inf
+
+    for gen in 1:generations
+        newGen=[]
+
+        fitness_values = evaluate_population(population)
+
+        p1 = selection(population, fitness_values)
+        p2 = selection(population, fitness_values)
+
+        enfantA, enfantB = crossover(p1, p2, crossover_rate)
+
+        mutA = survivantEnfant(mutation(enfantA, mutation_rate))
+        push!(newGen, mutA)
+        mutB = survivantEnfant(mutation(enfantB, mutation_rate))
+        push!(newGen, mutA)
+
+        population = changeGeneration(newGen, population_size)
+    end
+
+    best_value, best_solution = IdentifieMeilleur(population)
+
+    return best_solution, best_value
 end

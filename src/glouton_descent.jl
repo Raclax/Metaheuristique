@@ -8,7 +8,7 @@ function z(x, values)
     return dot(x, values)
 end
 
-function valide(sol, A)
+function valide(sol)
     colonnes = findall(x -> x == 1, sol)
     cidx = [colonne[1] for colonne in colonnes]
 
@@ -107,7 +107,7 @@ function echange_xx(k, p, solution)
             voisin = copy(solution)
             voisin[j] = 1  
 
-            if valide(voisin, A) 
+            if valide(voisin) 
                 voisin_value = z(voisin, C)
                 if voisin_value > valactuelle
                     solution = voisin
@@ -124,7 +124,7 @@ function echange_xx(k, p, solution)
                 voisin[i] = 0  
                 voisin[j] = 1 
 
-                if valide(voisin, A)
+                if valide(voisin)
                     voisin_value = z(voisin, C)
                     if voisin_value > valactuelle
                         solution = voisin
@@ -144,7 +144,7 @@ function echange_xx(k, p, solution)
                     voisin[ones[k_idx]] = 0  
                     voisin[j] = 1  
 
-                    if valide(voisin, A)
+                    if valide(voisin)
                         voisin_value = z(voisin, C)
                         if voisin_value >= valactuelle
                             solution = voisin
