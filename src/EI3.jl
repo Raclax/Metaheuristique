@@ -1,5 +1,5 @@
 include("loadSPP.jl")
-include("GRASP.jl")
+include("EI2.jl")
 using LinearAlgebra
 fname = "../Data/pb_100rnd0100.dat"
 C, A = loadSPP(fname)
@@ -141,7 +141,7 @@ end
 # ----------------------------------------------------------------------------------------------------
 
 population_size = 10
-generations = 1000
+generations = 100
 mutation_rate = 0.01
 crossover_rate = 0.7
 

@@ -1,9 +1,7 @@
 include("loadSPP.jl")
-#include("glouton_const2.jl")
 fname = "../Data/pb_100rnd0100.dat"
 C, A = loadSPP(fname)
 m, n = size(A)
-
 
 function utility(A, C, n)
 
@@ -21,7 +19,6 @@ function greedy2(C, A)
     x = zeros(Int, n)
 
     for un in u
-        #println("un = ", un)
         feasible = true
         for i in 1:m
             if A[i, un] == 1
@@ -66,7 +63,6 @@ function deepest_d(solution)
     # en 2-1
     new=true
     while new
-        #println("Début-recherche dans un voisinage avec mouvement 2-1")
         new=false
 
         x, zx = echange_xx(2, 1, best)
@@ -74,21 +70,14 @@ function deepest_d(solution)
             best = x
             best_valeur = zx
 
-            #println("nouveau meilleur = ", best_valeur)
             new=true
         end
-
-    #println("Fin--recherche dans un voisinage avce mouvement 2-1")
     end
-
-    println("______________")
-           
 
     # en 1-1
     new=true
 
     while new
-        #println("Début-recherche dans un voisinage avec mouvement 1-1")
         new=false
 
         x, zx = echange_xx(1, 1, best)
@@ -96,40 +85,24 @@ function deepest_d(solution)
             best = x
             best_valeur = zx
 
-            #println("nouveau meilleur = ", best_valeur)
             new=true
         end
-
-        
-    #println("Fin--recherche dans un voisinage avce mouvement 1-1")           
-    end
-
-    println("______________")
-        
+    end        
 
     # en 0-1
     new=true
 
     while new
-        #println("Début-recherche dans un voisinage avec mouvement 0-1")
         new=false
         voisins, idx= echange_xx(0, 1, best)
-        # println("Il y en a ",length(voisins), " voisins")
-
         x, zx = echange_xx(0, 1, best)
         if zx > best_valeur
             best = x
             best_valeur = zx
 
-            #println("nouveau meilleur = ", best_valeur)
             new=true
         end
-    #println("Fin--recherche dans un voisinage avce mouvement 0-1")
     end
-
-    println("______________")
-        
-
     
     return best, best_valeur
 end 
@@ -137,8 +110,7 @@ end
 
 
 function echange_xx(k, p, solution)
-    # l = Vector{Vector{Int}}() 
-    # idx = Vector{Tuple{Vector{Int}, Vector{Int}}}()
+
     ones = findall(x -> x == 1, solution)
     zeros = findall(x -> x == 0, solution)
     valactuelle = z(solution, C)
@@ -199,3 +171,8 @@ function echange_xx(k, p, solution)
     end
     return solution, valactuelle
 end
+
+
+
+grd, zg = greedy2(C, A)
+dea, v=deepest_d(grd)

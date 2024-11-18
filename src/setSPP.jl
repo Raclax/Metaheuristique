@@ -1,6 +1,10 @@
 # --------------------------------------------------------------------------- #
 # Setting the JuMP model of SPP
 
+using JuMP
+using GLPK
+
+
 function setSPP(C, A)
   m, n = size(A)
   spp = Model()
