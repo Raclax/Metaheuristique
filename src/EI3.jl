@@ -1,11 +1,13 @@
 include("loadSPP.jl")
+include("GRASP.jl")
+using LinearAlgebra
 fname = "../Data/pb_100rnd0100.dat"
 C, A = loadSPP(fname)
 m, n = size(A)
 
 
 function initialize_population(population_size, chromosome_length)
-    return [rand(Bool, chromosome_length) for _ in 1:population_size]
+    return [rand(0:1, chromosome_length) for _ in 1:population_size]
 end
 
 # ----------------------------------------------------------------------------------------------------
@@ -22,18 +24,18 @@ end
 
 # ----------------------------------------------------------------------------------------------------
 
-function selection(population, fitness_values)
+function selection(population)
     cand2 = population[rand(1:length(population))]
     cand1 = population[rand(1:length(population))]
 
-    if fitness_values[cand2] > fitness_values[cand1]
+    if fitness(cand2) > fitness(cand1)
         cand1 = cand2
     end
 
     filter!(elem -> elem[1] != cand1, population)
 
     return cand1  
-
+end 
 # ----------------------------------------------------------------------------------------------------
 
 function crossover(p1, p2, crossover_rate)
@@ -51,20 +53,39 @@ end
 
 # ----------------------------------------------------------------------------------------------------
 
-function mutation(population, mutation_rate)
-    for chromosome in population
-        for i in eachindex(chromosome)
-            if rand() < mutation_rate
-                chromosome[i] = !chromosome[i]
+function mutation(chromosome, mutation_rate)
+    for i in eachindex(chromosome)
+        if rand() < mutation_rate
+            if chromosome[i] == 0
+                chromosome[i] = 1
+            else
+                chromosome[i] = 0
             end
         end
     end
-    return population
+    return repare(chromosome)
 end
 
 # ----------------------------------------------------------------------------------------------------
 
-# Selectionne un individu survivant entre deux individus
+function repare(chromosome)
+
+    utilite = map(i -> C[i] / sum(A[:, i]), 1:n)
+    while !valide(chromosome)
+        conflict_indices = findall(x -> x > 1, A * chromosome)
+        
+        for idx in conflict_indices
+            conflicting_elements = findall(x -> x == 1, A[idx, :])
+            min_value_index = argmin(utilite[conflicting_elements])
+            chromosome[conflicting_elements[min_value_index]] = 0
+        end
+    end
+    return chromosome
+end
+
+# ----------------------------------------------------------------------------------------------------
+
+# Valide et répare
 function survivantEnfant(enfMut)
     if valide(enfMut)
         return enfMut
@@ -81,38 +102,25 @@ end
 
 # ----------------------------------------------------------------------------------------------------
 # Recupere la nouvelle generation comme population de base
-function changeGeneration(newGen, popSize)
-
-    pop = Vector(undef, popSize)
-    NbRealisable = 0
-    maxFitness = 0
-    minFitness = 100
-
-    for i=1:popSize
-        pop[i] = pop!(newGen)
-        ind, fitness, realisable = pop[i]
-        if realisable
-            NbRealisable +=1
-            minFitness = min(fitness,minFitness)
-        end
-        maxFitness = max(fitness,maxFitness)
+function changeGeneration(newGen::Vector{Any}, popSize::Int64)
+    if isempty(newGen)
+        error("New generation is empty")
     end
-    println("Nbre Realisable = ", NbRealisable, " minFitnessRealisable = ", minFitness, " maxFitness = ", maxFitness)
-    return pop
+    if length(newGen) < popSize
+        error("New generation has fewer elements than the population size")
+    end
+    return newGen[1:popSize]
 end
-
 # ----------------------------------------------------------------------------------------------------
 
 function IdentifieMeilleur(population)
-    best_value = -Inf
+    best_value = 0
     best_solution = nothing
     for chromosome in population
         value = fitness(chromosome)
-        if value > best_value
-            if valide(chromosome)
-                best_value = value
-                best_solution = chromosome
-            end
+        if value > best_value && valide(chromosome)
+            best_value = value
+            best_solution = chromosome
         end
     end
     return best_value, best_solution
@@ -132,40 +140,55 @@ end
 
 # ----------------------------------------------------------------------------------------------------
 
-population_size = 100
+population_size = 10
 generations = 1000
 mutation_rate = 0.01
 crossover_rate = 0.7
 
-best_solution, best_value = genetic_algorithm(A, C, population_size, generations, mutation_rate, crossover_rate)
 
 
 
 function genetic_algorithm(A, C, population_size, generations, mutation_rate, crossover_rate)
-    population = initialize_population(population_size, size(A, 2))
 
-    # best_solution = nothing
-    # best_value = -Inf
+    population = []
 
-    for gen in 1:generations
-        newGen=[]
-
-        fitness_values = evaluate_population(population)
-
-        p1 = selection(population, fitness_values)
-        p2 = selection(population, fitness_values)
-
-        enfantA, enfantB = crossover(p1, p2, crossover_rate)
-
-        mutA = survivantEnfant(mutation(enfantA, mutation_rate))
-        push!(newGen, mutA)
-        mutB = survivantEnfant(mutation(enfantB, mutation_rate))
-        push!(newGen, mutA)
-
-        population = changeGeneration(newGen, population_size)
+    
+    for i in 1:population_size
+        alpha = rand(0.1 : 0.7)
+        s = grconst(A, C, alpha)
+        push!(population, s)
     end
 
-    best_value, best_solution = IdentifieMeilleur(population)
+    fitness_values = evaluate_population(population)    
 
+    for _ in 1:generations
+        #newGen=[]
+        
+        p1 = selection(population)
+        p2 = selection(population)
+        
+        enfantA, enfantB = crossover(p1, p2, crossover_rate)
+        
+        mutA = survivantEnfant(mutation(enfantA, mutation_rate))
+        #push!(newGen, mutA)
+        mutB = survivantEnfant(mutation(enfantB, mutation_rate))
+        #push!(newGen, mutB)
+        
+        sorted_indices = sortperm(fitness_values, rev=true)
+        population = population[sorted_indices[1:population_size]]
+        fitness_values = fitness_values[sorted_indices[1:population_size]]
+        
+        
+        push!(population, mutA)
+        push!(population, mutB)
+        push!(fitness_values, fitness(mutA))
+        push!(fitness_values, fitness(mutB))
+        # population = changeGeneration(newGen, population_size)
+    end
+    
+    best_value, best_solution = IdentifieMeilleur(population)
+    
     return best_solution, best_value
 end
+
+best_solution, best_value = genetic_algorithm(A, C, population_size, generations, mutation_rate, crossover_rate)

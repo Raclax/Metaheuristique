@@ -1,6 +1,6 @@
 include("loadSPP.jl")
 # include("glouton_const2.jl")
-# include("glouton_descent.jl")
+include("glouton_descent.jl")
 using InvertedIndices
 using Distributions
 using StatsBase
@@ -150,10 +150,10 @@ function deepest_d(solution)
     while new
         #println("Début-recherche dans un voisinage avec mouvement 0-1")
         new=false
-        voisins, idx= echange_xx(0, 1, best, zeros, ones)
+        #voisins, idx= echange_xx(0, 1, best, zeros, ones)
         # println("Il y en a ",length(voisins), " voisins")
 
-        x, zx = echange_xx(0, 1, best)
+        x, zx = echange_xx(0, 1, best, zeros, ones)
         if zx > best_valeur
             best = x
             best_valeur = zx
