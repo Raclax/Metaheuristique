@@ -1,10 +1,11 @@
 include("loadSPP.jl")
+using LinearAlgebra
+
 fname = "../Data/pb_100rnd0100.dat"
 C, A = loadSPP(fname)
 m, n = size(A)
 
 function utility(A, C, n)
-
     U = zeros(n)
     for i in 1:n
         U[i] = C[i] /sum(A[: , i]) 
@@ -12,18 +13,17 @@ function utility(A, C, n)
     return U
 end
 
+# Construction avec algorithme glouton
+function greedy(C, A) 
+    utilites = sortperm(utility(A, C, n), rev=true) # trier les utilités
+    x = zeros(Int, n) # solution
 
-function greedy2(C, A)
-    u = sortperm(utility(A, C, n), rev=true)
-
-    x = zeros(Int, n)
-
-    for un in u
+    for best_u in utilites 
         feasible = true
         for i in 1:m
-            if A[i, un] == 1
-                for j in 1  :n
-                    if x[j] == 1 && A[i, j] == 1
+            if A[i, best_u] == 1 # si 1 dans la colonne
+                for j in 1:n
+                    if x[j] == 1 && A[i, j] == 1 # si 1 dans la ligne + dans la solution, alors colonne non validée
                         feasible = false
                         break
                     end
@@ -34,18 +34,19 @@ function greedy2(C, A)
             end
         end
         if feasible
-            x[un] = 1
+            x[best_u] = 1 # si non, colonne validée
         end
     end
     return x, dot(x, C)
 end
 
 
-
+# Calcul de la valeur de la fonction
 function z(x, values)
     return dot(x, values)
 end
 
+# Fonction de validation d'une solution
 function valide(sol)
     colonnes = findall(x -> x == 1, sol)
     cidx = [colonne[1] for colonne in colonnes]
@@ -57,11 +58,13 @@ function valide(sol)
 end
 
 
+# Fonction de recherche locale en decente profonde
 function deepest_d(solution)
     best = solution
     best_valeur = z(best, C)
+
     # en 2-1
-    new=true
+    new=true # variable pour savoir si on a trouvé une meilleure solution
     while new
         new=false
 
@@ -108,23 +111,23 @@ function deepest_d(solution)
 end 
 
 
-
+#Fonction unique pour 0-1, 1-1 et 2-1
 function echange_xx(k, p, solution)
 
-    ones = findall(x -> x == 1, solution)
-    zeros = findall(x -> x == 0, solution)
+    ones = findall(x -> x == 1, solution)   # colonnes avec 1
+    zeros = findall(x -> x == 0, solution)  # colonnes avec 0
     valactuelle = z(solution, C)
 
-    if k == 0
+    if k == 0 # 0-1
         for j in zeros
             voisin = copy(solution)
-            voisin[j] = 1  
+            voisin[j] = 1  # Change un 0 en 1
 
             if valide(voisin) 
                 voisin_value = z(voisin, C)
                 if voisin_value > valactuelle
                     solution = voisin
-                    valactuelle = voisin_value
+                    valactuelle = voisin_value ## et update la solution si elle est meilleure 
                 end
             end
         end
@@ -135,13 +138,13 @@ function echange_xx(k, p, solution)
             for j in zeros
                 voisin = copy(solution)
                 voisin[i] = 0  
-                voisin[j] = 1 
+                voisin[j] = 1 # Change un 0 en 1 et un 1 en 0
 
                 if valide(voisin)
                     voisin_value = z(voisin, C)
                     if voisin_value > valactuelle
                         solution = voisin
-                        valactuelle = voisin_value
+                        valactuelle = voisin_value # et update la solution si elle est meilleure 
                     end
                 end
             end      
@@ -155,13 +158,13 @@ function echange_xx(k, p, solution)
                     voisin = copy(solution)
                     voisin[ones[i]] = 0 
                     voisin[ones[k_idx]] = 0  
-                    voisin[j] = 1  
+                    voisin[j] = 1  # Change un 0 en 1 et deux 1 en 0
 
                     if valide(voisin)
                         voisin_value = z(voisin, C)
                         if voisin_value >= valactuelle
                             solution = voisin
-                            valactuelle = voisin_value
+                            valactuelle = voisin_value # et update la solution si elle est meilleure 
                         end
                     end
                 end
@@ -174,5 +177,5 @@ end
 
 
 
-grd, zg = greedy2(C, A)
+grd, zg = greedy(C, A)
 dea, v=deepest_d(grd)

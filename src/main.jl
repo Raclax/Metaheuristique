@@ -3,7 +3,6 @@
 
 # Using the following packages
 #using JuMP, GLPK
-#using LinearAlgebra
 
 include("loadSPP.jl")
 include("setSPP.jl")
