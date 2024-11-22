@@ -1,7 +1,7 @@
 include("loadSPP.jl")
 using LinearAlgebra
 
-fname = "../Data/pb_100rnd0100.dat"
+fname = "../Data/pb_200rnd0500.dat"
 C, A = loadSPP(fname)
 m, n = size(A)
 
@@ -12,6 +12,7 @@ function utility(A, C, n)
     end
     return U
 end
+
 
 # Construction avec algorithme glouton
 function greedy(C, A) 
@@ -62,18 +63,23 @@ end
 function deepest_d(solution)
     best = solution
     best_valeur = z(best, C)
+    ones = findall(x -> x == 1, solution)
+    zeros = findall(x -> x == 0, solution)
+
 
     # en 2-1
     new=true # variable pour savoir si on a trouvé une meilleure solution
     while new
         new=false
 
-        x, zx = echange_xx(2, 1, best)
+        x, zx = echange_xx(2, 1, best, zeros, ones)
         if zx > best_valeur
             best = x
             best_valeur = zx
+            ones = findall(x -> x == 1, best)
+            zeros = findall(x -> x == 0, best)
 
-            new=true
+            new=true # si on en a trouvé une, alors on recommence ce kp
         end
     end
 
@@ -83,10 +89,12 @@ function deepest_d(solution)
     while new
         new=false
 
-        x, zx = echange_xx(1, 1, best)
+        x, zx = echange_xx(1, 1, best, zeros, ones)
         if zx > best_valeur
             best = x
             best_valeur = zx
+            ones = findall(x -> x == 1, best)
+            zeros = findall(x -> x == 0, best)
 
             new=true
         end
@@ -97,11 +105,13 @@ function deepest_d(solution)
 
     while new
         new=false
-        voisins, idx= echange_xx(0, 1, best)
-        x, zx = echange_xx(0, 1, best)
+
+        x, zx = echange_xx(0, 1, best, zeros, ones)
         if zx > best_valeur
             best = x
             best_valeur = zx
+            ones = findall(x -> x == 1, best)
+            zeros = findall(x -> x == 0, best)
 
             new=true
         end
@@ -112,10 +122,8 @@ end
 
 
 #Fonction unique pour 0-1, 1-1 et 2-1
-function echange_xx(k, p, solution)
+function echange_xx(k, p, solution, zeros, ones)
 
-    ones = findall(x -> x == 1, solution)   # colonnes avec 1
-    zeros = findall(x -> x == 0, solution)  # colonnes avec 0
     valactuelle = z(solution, C)
 
     if k == 0 # 0-1
@@ -123,11 +131,11 @@ function echange_xx(k, p, solution)
             voisin = copy(solution)
             voisin[j] = 1  # Change un 0 en 1
 
-            if valide(voisin) 
-                voisin_value = z(voisin, C)
-                if voisin_value > valactuelle
+            voisin_value = z(voisin, C)
+            if voisin_value > valactuelle
+                if valide(voisin)
                     solution = voisin
-                    valactuelle = voisin_value ## et update la solution si elle est meilleure 
+                    valactuelle = voisin_value
                 end
             end
         end
@@ -140,11 +148,11 @@ function echange_xx(k, p, solution)
                 voisin[i] = 0  
                 voisin[j] = 1 # Change un 0 en 1 et un 1 en 0
 
-                if valide(voisin)
-                    voisin_value = z(voisin, C)
-                    if voisin_value > valactuelle
-                        solution = voisin
-                        valactuelle = voisin_value # et update la solution si elle est meilleure 
+                voisin_value = z(voisin, C)
+                if voisin_value > valactuelle
+                    if valide(voisin)
+                       solution = voisin
+                       valactuelle = voisin_value
                     end
                 end
             end      
@@ -160,11 +168,11 @@ function echange_xx(k, p, solution)
                     voisin[ones[k_idx]] = 0  
                     voisin[j] = 1  # Change un 0 en 1 et deux 1 en 0
 
-                    if valide(voisin)
-                        voisin_value = z(voisin, C)
-                        if voisin_value >= valactuelle
+                    voisin_value = z(voisin, C)
+                    if voisin_value > valactuelle
+                        if valide(voisin)
                             solution = voisin
-                            valactuelle = voisin_value # et update la solution si elle est meilleure 
+                            valactuelle = voisin_value
                         end
                     end
                 end

@@ -5,18 +5,22 @@ using InvertedIndices
 using Distributions
 using StatsBase
 
-fname = "../Data/pb_100rnd0100.dat"
+using Statistics
+using Dates
+
+fname = "../Data/pb_200rnd0500.dat"
 C, A = loadSPP(fname)
 m, n = size(A)
 
 
-function grasp(A, C, alpha, repeat=10)
+function grasp(A, C, alpha, repeat=12)
     best = zeros(Int, n) # solution
     best_valeur = 0 # valeur de la solution
 
     for i in 1:repeat
         S = grconst(A, C, alpha)
-        S, v = deepest_d(S) # construciton et amélioration d'une solution
+        v = z(S, C)
+        #S, v = deepest_d(S) # construction et amélioration d'une solution
         
         if v > best_valeur
             best = S
@@ -57,7 +61,6 @@ function grconst(A, C, alpha)
         ulim = umin + alpha*(maximum(utility_values) - umin) #on update les bornes
 
     end
-
     return S
 end
 
@@ -222,6 +225,7 @@ function ReactiveGrasp(A, C, m, maxIteration, Nalpha)
     z_best = maximum(z_avg)
     s_best = solu[argmax(z_avg)]
     z_worst = minimum(z_avg)
+    best_alpha = alpha_values[argmax(z_avg)]
 
     # Construire la solution en utilisant l'algorithme de construction
     solution, valactuelle = grasp(A, C, alpha_values[1])
@@ -237,6 +241,7 @@ function ReactiveGrasp(A, C, m, maxIteration, Nalpha)
         if valactuelle > z_best
             z_best = valactuelle
             s_best = solution
+            best_alpha = alpha  # Mettre à jour best_alpha avec la nouvelle meilleure valeur
         end
 
         z_worst = min(z_worst, valactuelle)
@@ -257,9 +262,39 @@ function ReactiveGrasp(A, C, m, maxIteration, Nalpha)
 
     end
     
-    return s_best, z_best # Retourne la meilleure solution trouvée
+    return s_best, z_best, best_alpha # Retourne la meilleure solution trouvée
 
 
 end
 
-s,v = ReactiveGrasp(A, C, 10,100,10)
+#s,v, a = ReactiveGrasp(A, C, 10,85,15)
+
+#grasp(A, C, 5, 10)
+
+
+function run_reactivegrasp_multiple_times(A, C, population_size, iterations, Nalpha)
+    valactuelle_values = []
+    #running_times = []
+    alpha_values = []
+
+    for _ in 1:10
+        #start_time = now()
+        _, valactuelle, alpha = ReactiveGrasp(A, C, population_size, iterations, Nalpha)
+        #end_time = now()
+        
+        push!(valactuelle_values, valactuelle)
+        #push!(running_times, end_time - start_time)
+        push!(alpha_values, alpha)
+    end
+
+    max_valactuelle = maximum(valactuelle_values)
+    min_valactuelle = minimum(valactuelle_values)
+    mean_valactuelle = mean(valactuelle_values)
+    #mean_running_time = mean(running_times)
+    mean_alpha = mean(alpha_values)
+
+
+    return max_valactuelle, min_valactuelle, mean_valactuelle, mean_alpha
+end
+
+run_reactivegrasp_multiple_times(A, C, 10, 85, 15)

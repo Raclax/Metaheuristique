@@ -3,6 +3,7 @@
 
 using JuMP
 using GLPK
+using LinearAlgebra
 
 
 function setSPP(C, A)
