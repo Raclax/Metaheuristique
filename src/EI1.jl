@@ -1,9 +1,9 @@
 include("loadSPP.jl")
 using LinearAlgebra
 
-fname = "../Data/pb_100rnd0300.dat"
-C, A = loadSPP(fname)
-m, n = size(A)
+# fname = "../Data/pb_100rnd0300.dat"
+# C, A = loadSPP(fname)
+# m, n = size(A)
 
 function utility(A, C, n)
     U = zeros(n)
@@ -15,7 +15,9 @@ end
 
 
 # Construction avec algorithme glouton
-function greedy(C, A) 
+function greedy(fname) 
+    C, A = loadSPP(fname)
+    m, n = size(A)
     utilites = sortperm(utility(A, C, n), rev=true) # trier les utilités
     x = zeros(Int, n) # solution
 
@@ -48,7 +50,7 @@ function z(x, values)
 end
 
 # Fonction de validation d'une solution
-function valide(sol)
+function valide(sol, A)
     colonnes = findall(x -> x == 1, sol)
     cidx = [colonne[1] for colonne in colonnes]
 
@@ -60,11 +62,13 @@ end
 
 
 # Fonction de recherche locale en decente profonde
-function deepest_d(solution)
-    best = solution
+function resoudreSPP(fname)
+    C, A = loadSPP(fname)
+    m, n = size(A)
+    best = greedy(fname)[1]
     best_valeur = z(best, C)
-    ones = findall(x -> x == 1, solution)
-    zeros = findall(x -> x == 0, solution)
+    ones = findall(x -> x == 1, best)
+    zeros = findall(x -> x == 0, best)
 
 
     # en 2-1
@@ -72,7 +76,7 @@ function deepest_d(solution)
     while new
         new=false
 
-        x, zx = echange_xx(2, 1, best, zeros, ones)
+        x, zx = echange_xx(2, 1, best, zeros, ones, A, C)
         if zx > best_valeur
             best = x
             best_valeur = zx
@@ -89,7 +93,7 @@ function deepest_d(solution)
     while new
         new=false
 
-        x, zx = echange_xx(1, 1, best, zeros, ones)
+        x, zx = echange_xx(1, 1, best, zeros, ones, A, C)
         if zx > best_valeur
             best = x
             best_valeur = zx
@@ -106,7 +110,7 @@ function deepest_d(solution)
     while new
         new=false
 
-        x, zx = echange_xx(0, 1, best, zeros, ones)
+        x, zx = echange_xx(0, 1, best, zeros, ones, A, C)
         if zx > best_valeur
             best = x
             best_valeur = zx
@@ -122,7 +126,7 @@ end
 
 
 #Fonction unique pour 0-1, 1-1 et 2-1
-function echange_xx(k, p, solution, zeros, ones)
+function echange_xx(k, p, solution, zeros, ones, A, C)
 
     valactuelle = z(solution, C)
 
@@ -133,7 +137,7 @@ function echange_xx(k, p, solution, zeros, ones)
 
             voisin_value = z(voisin, C)
             if voisin_value > valactuelle
-                if valide(voisin)
+                if valide(voisin, A)
                     solution = voisin
                     valactuelle = voisin_value
                 end
@@ -150,7 +154,7 @@ function echange_xx(k, p, solution, zeros, ones)
 
                 voisin_value = z(voisin, C)
                 if voisin_value > valactuelle
-                    if valide(voisin)
+                    if valide(voisin, A)
                        solution = voisin
                        valactuelle = voisin_value
                     end
@@ -170,7 +174,7 @@ function echange_xx(k, p, solution, zeros, ones)
 
                     voisin_value = z(voisin, C)
                     if voisin_value > valactuelle
-                        if valide(voisin)
+                        if valide(voisin, A)
                             solution = voisin
                             valactuelle = voisin_value
                         end
@@ -185,5 +189,16 @@ end
 
 
 
-grd, zg = greedy(C, A)
-dea, v=deepest_d(grd)
+function experimentationSPP()
+    println("didactic", resoudreSPP("../Data/didactic.dat"))
+    println("pb_100rnd0100", resoudreSPP("../Data/pb_100rnd0100.dat"))
+    println("pb_100rnd0300", resoudreSPP("../Data/pb_100rnd0300.dat"))
+    println("pb_200rnd0100", resoudreSPP("../Data/pb_200rnd0100.dat"))
+    println("pb_200rnd0500", resoudreSPP("../Data/pb_200rnd0500.dat"))
+    println("pb_500rnd0100", resoudreSPP("../Data/pb_500rnd0100.dat"))
+    println("pb_500rnd0100", resoudreSPP("../Data/pb_500rnd0100.dat"))
+    println("pb_500rnd1700", resoudreSPP("../Data/pb_500rnd1700.dat"))
+    println("pb_1000rnd0100", resoudreSPP("../Data/pb_1000rnd0100.dat"))
+    println("pb_1000rnd0200", resoudreSPP("../Data/pb_1000rnd0200.dat"))
+    println("pb_2000rnd0100", resoudreSPP("../Data/pb_2000rnd0100.dat"))
+end

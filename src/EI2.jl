@@ -5,22 +5,24 @@ using InvertedIndices
 using Distributions
 using StatsBase
 
-using Statistics
-using Dates
+# using Statistics
+# using Dates
 
-fname = "../Data/pb_100rnd0300.dat"
-C, A = loadSPP(fname)
-m, n = size(A)
+# fname = "../Data/pb_100rnd0100.dat"
+# C, A = loadSPP(fname)
+# m, n = size(A)
 
 
-function grasp(A, C, alpha, repeat=12)
+function grasp(fname, alpha=0.7, repeat=12)
+    C, A = loadSPP(fname)
+    m, n = size(A)
     best = zeros(Int, n) # solution
     best_valeur = 0 # valeur de la solution
 
     for i in 1:repeat
         S = grconst(A, C, alpha)
         v = z(S, C)
-        S, v = deepest_d(S) # amélioration, peut être évitée pour améliorer le CPUt
+        S, v = deepest_d(S, A, C) # amélioration, peut être évitée pour améliorer le CPUt
         
         if v > best_valeur
             best = S
@@ -32,6 +34,7 @@ end
 
 # Construction randomisée aléatoire
 function grconst(A, C, alpha)
+    m, n = size(A)
     S=zeros(Int, n) # solution
     utility_values = utility(A,C, length(C)) # utilités
     umin = minimum(utility_values)
@@ -80,7 +83,7 @@ function valide(sol, A)
 end
 
 
-function deepest_d(solution)
+function deepest_d(solution, A, C)
     best = solution
     best_valeur = z(best, C)
     ones = findall(x -> x == 1, solution)
@@ -91,7 +94,7 @@ function deepest_d(solution)
     while new
         new=false
 
-        x, zx = echange_xx(2, 1, best, zeros, ones)
+        x, zx = echange_xx(2, 1, best, zeros, ones, A, C)
         if zx > best_valeur
             best = x
             best_valeur = zx
@@ -108,7 +111,7 @@ function deepest_d(solution)
     while new
         new=false
 
-        x, zx = echange_xx(1, 1, best, zeros, ones)
+        x, zx = echange_xx(1, 1, best, zeros, ones, A, C)
         if zx > best_valeur
             best = x
             best_valeur = zx
@@ -126,7 +129,7 @@ function deepest_d(solution)
     while new
         new=false
 
-        x, zx = echange_xx(0, 1, best, zeros, ones)
+        x, zx = echange_xx(0, 1, best, zeros, ones, A, C)
         if zx > best_valeur
             best = x
             best_valeur = zx
@@ -141,7 +144,7 @@ function deepest_d(solution)
 end 
 
 
-function echange_xx(k, p, solution, zeros, ones)
+function echange_xx(k, p, solution, zeros, ones, A, C)
 
     valactuelle = z(solution, C)
 
@@ -207,9 +210,12 @@ end
 ### REACTIVE GRASP
 
 
-function ReactiveGrasp(A, C, m, maxIteration, Nalpha)  
-    
+function ReactiveGrasp(fname, m=10, maxIteration=85, Nalpha=15)  
+    C, A = loadSPP(fname)
+    #m, n = size(A)
+
     pk = fill(1 / m, m) 
+    #println(pk)
     alpha_values = [(i - 1) / m for i in 1:m]
     n_alpha = zeros(Int, m)
 
@@ -218,7 +224,7 @@ function ReactiveGrasp(A, C, m, maxIteration, Nalpha)
     solu = []
 
     for i in 1:m
-        c, z_avg[i] = grasp(A, C, i / m)
+        c, z_avg[i] = grasp(fname, i / m)
         push!(solu, c)
     end
 
@@ -228,14 +234,15 @@ function ReactiveGrasp(A, C, m, maxIteration, Nalpha)
     best_alpha = alpha_values[argmax(z_avg)]
 
     # Construire la solution en utilisant l'algorithme de construction
-    solution, valactuelle = grasp(A, C, alpha_values[1])
+    solution, valactuelle = grasp(fname, alpha_values[1])
 
     for iter in 1:maxIteration
         # Choisir une valeur de alpha en fonction des probabilités pk
+        # println(Weights(pk))
         alpha_idx = sample(1:m, Weights(pk))
         alpha = alpha_values[alpha_idx]
     
-        solution, valactuelle = grasp(A, C, alpha)
+        solution, valactuelle = grasp(fname, alpha)
 
         # Mettre à jour z_best, z_worst, moyenne
         if valactuelle > z_best
@@ -272,23 +279,37 @@ end
 #grasp(A, C, 5, 10)
 
 
-function run_reactivegrasp_multiple_times(A, C, alpha)
-    valactuelle_values = []
-    running_times = []
+# function run_reactivegrasp_multiple_times(A, C, alpha)
+#     valactuelle_values = []
+#     running_times = []
 
-    for _ in 1:10
-        elapsed_time = @elapsed _, valactuelle = grasp(A, C, alpha)
-        push!(valactuelle_values, valactuelle)
-        push!(running_times, elapsed_time)
-    end
+#     for _ in 1:10
+#         elapsed_time = @elapsed _, valactuelle = grasp(A, C, alpha)
+#         push!(valactuelle_values, valactuelle)
+#         push!(running_times, elapsed_time)
+#     end
 
-    max_valactuelle = maximum(valactuelle_values)
-    min_valactuelle = minimum(valactuelle_values)
-    mean_valactuelle = mean(valactuelle_values)
-    mean_running_time = mean(running_times)
+#     max_valactuelle = maximum(valactuelle_values)
+#     min_valactuelle = minimum(valactuelle_values)
+#     mean_valactuelle = mean(valactuelle_values)
+#     mean_running_time = mean(running_times)
 
-    return max_valactuelle, min_valactuelle, mean_valactuelle, mean_running_time
+#     return max_valactuelle, min_valactuelle, mean_valactuelle, mean_running_time
+# end
+
+
+# run_reactivegrasp_multiple_times(A, C, 0.7)
+
+function experimentationSPP()
+    println("didactic", ReactiveGrasp("../Data/didactic.dat"))
+    println("pb_100rnd0100", ReactiveGrasp("../Data/pb_100rnd0100.dat"))
+    println("pb_100rnd0300", ReactiveGrasp("../Data/pb_100rnd0300.dat"))
+    println("pb_200rnd0100", ReactiveGrasp("../Data/pb_200rnd0100.dat"))
+    println("pb_200rnd0500", ReactiveGrasp("../Data/pb_200rnd0500.dat"))
+    println("pb_500rnd0100", ReactiveGrasp("../Data/pb_500rnd0100.dat"))
+    println("pb_500rnd0100", ReactiveGrasp("../Data/pb_500rnd0100.dat"))
+    println("pb_500rnd1700", ReactiveGrasp("../Data/pb_500rnd1700.dat"))
+    println("pb_1000rnd0100", ReactiveGrasp("../Data/pb_1000rnd0100.dat"))
+    println("pb_1000rnd0200", ReactiveGrasp("../Data/pb_1000rnd0200.dat"))
+    println("pb_2000rnd0100", ReactiveGrasp("../Data/pb_2000rnd0100.dat"))
 end
-
-
-run_reactivegrasp_multiple_times(A, C, 0.7)

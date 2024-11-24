@@ -2,31 +2,30 @@ using LinearAlgebra
 
 include("loadSPP.jl")
 include("EI2.jl")
-fname = "../Data/pb_200rnd0100.dat"
-C, A = loadSPP(fname)
-m, n = size(A)
+#fname = "../Data/pb_500rnd0100.dat"
+# C, A = loadSPP(fname)
+# m, n = size(A)
 
 
-function evaluate_population(population)
-    return [fitness(chromosome) for chromosome in population]
+function evaluate_population(population, C)
+    return [fitness(chromosome, C) for chromosome in population]
 end
 
 # ----------------------------------------------------------------------------------------------------
 
-function fitness(chromosome)
-    #équivalant à z(x, values)
+function fitness(chromosome, C)    #équivalant à z(x, values)
     return dot(chromosome, C) 
 end
 
 # ----------------------------------------------------------------------------------------------------
 
-function selection(population)
+function selection(population, C)
 
     #sélection par tournois
     cand2 = population[rand(1:length(population))]
     cand1 = population[rand(1:length(population))]
 
-    if fitness(cand2) > fitness(cand1)
+    if fitness(cand2, C) > fitness(cand1, C)
         cand1 = cand2
     end
 
@@ -34,7 +33,7 @@ function selection(population)
 end 
 # ----------------------------------------------------------------------------------------------------
 
-function crossover(p1, p2, crossover_rate)
+function crossover(p1, p2, crossover_rate, C, A)
     enfantA=copy(p1)
     enfantB=copy(p2)
     
@@ -44,84 +43,87 @@ function crossover(p1, p2, crossover_rate)
         enfantB = vcat(p2[1:crossover_point], p1[crossover_point+1:end])
         
     end
-    
+    enfantA = reparation(C,A,enfantA)
+    enfantB = reparation(C,A,enfantB)
     return enfantA, enfantB
 end
 
 # ----------------------------------------------------------------------------------------------------
 
-function mutation(chromosome, mutation_rate)
+function mutation(enf, mutation_rate,C, A)
+    
+    chromosome = copy(enf)
     for i in eachindex(chromosome)
         if rand() < mutation_rate #mutation_rate pas : il y a pas souvent de mutations 
             chromosome[i] = 1 - chromosome[i]
         end
     end
-    return repare(chromosome) #la solution est systématiquement réparée
+    return reparation(C,A,chromosome)
 end
 
 # ----------------------------------------------------------------------------------------------------
 
-function repare(chromosome)
 
-    if valide(chromosome)
-        return chromosome
-    end
-    utilite = map(i -> C[i] / sum(A[:, i]), 1:n) #utilité de chaque colonne
-    while !valide(chromosome)
-        conflict_indices = findall(x -> x > 1, A * chromosome) #indices des colonnes conflictuelles
-        
-        for idx in conflict_indices
-            conflicting_elements = findall(x -> x == 1, A[idx, :]) #indices des éléments conflictuels
-            min_value_index = argmin(utilite[conflicting_elements]) #on prend l'élément de plus petite utilité
-            chromosome[conflicting_elements[min_value_index]] = 0 #et on le retire
+function reparation(C,A,sol)
+    m, n = size(A)
+    utilite = map(i -> C[i] / sum(A[:, i]), 1:n)
+    u_idx=sortperm(utilite,rev=false)
+    for i=1:m
+        if(!valideLigne(A,sol,i))
+            for j in eachindex(sol)
+                if(A[i,u_idx[j]]==1 && sol[u_idx[j]]==1)
+                    sol[u_idx[j]]=0
+                    if(valideLigne(A,sol,i))
+                        break
+                    end
+                end
+            end
         end
     end
-    return chromosome
+    return sol
 end
 
 # ----------------------------------------------------------------------------------------------------
 
-function IdentifieMeilleur(population, fitness_values, sorted_indices)
-    best_index = sorted_indices[1]
-    best_solution = population[best_index]
-    best_value = fitness_values[best_index]
-    return best_value, best_solution
-end
-
-# ----------------------------------------------------------------------------------------------------
-
-function valide(sol)
-    colonnes = findall(x -> x == 1, sol)
-    cidx = [colonne[1] for colonne in colonnes]
-
-    if any(sum(A[:, cidx], dims=2) .> 1)
-        return false
+function valideLigne(A,sol,i)
+    m, n = size(A)
+    sum=0
+    for j=1:n
+        if(sol[j]==1 && A[i,j]==1)
+            sum=1+sum
+        end
+        if(sum>1)
+            return false
+        end
     end
     return true
-end 
+end
 
 # ----------------------------------------------------------------------------------------------------
 
-function genetic_algorithm(A, C, population_size, generations, mutation_rate, crossover_rate)
+function genetic_algorithm(fname, population_size = 200, generations = 50, mutation_rate = 0.9, crossover_rate = 0.01)
     
+    C, A = loadSPP(fname)
+    m, n = size(A)
+
     # Initialisation de la population, avec la construction de grasp car les solutions sont meilleures + les solutions sont valides 
     population = [grconst(A, C, rand(0.1:0.7)) for _ in 1:population_size]
-    fitness_values = evaluate_population(population)    
+    fitness_values = evaluate_population(population, C)    
 
     for _ in 1:generations
         
-        p1 = selection(population)
-        p2 = selection(population)
+        p1 = selection(population, C)
+        p2 = selection(population, C)
         
-        enfantA, enfantB = crossover(p1, p2, crossover_rate)
+        enfantA, enfantB = crossover(p1, p2, crossover_rate, C, A)
         
-        mutA = mutation(enfantA, mutation_rate)
-        mutB = mutation(enfantB, mutation_rate)
+        mutA = mutation(enfantA, mutation_rate, C, A)
+        mutB = mutation(enfantB, mutation_rate, C, A)
 
         push!(population, mutA)
         push!(population, mutB)
-        push!(fitness_values, fitness(mutA))
-        push!(fitness_values, fitness(mutB))
+        push!(fitness_values, fitness(mutA, C))
+        push!(fitness_values, fitness(mutB, C))
 
         sorted_indices = sortperm(fitness_values, rev=true) #on trie les indices des solutions par ordre décroissant de fitness
         population = population[sorted_indices[1:population_size]] #on garde les meilleures solutions
@@ -140,13 +142,13 @@ end
 
 # ----------------------------------------------------------------------------------------------------
 
-population_size = 10
-generations = 10
-mutation_rate = 0.01
-crossover_rate = 0.9
+# population_size = 200
+# generations = 50
+# mutation_rate = 0.01
+# crossover_rate = 0.9
 
 
-best_solution, best_val = genetic_algorithm(A, C, population_size, generations, mutation_rate, crossover_rate)
+# best_solution, best_val = genetic_algorithm(A, C, population_size, generations, mutation_rate, crossover_rate)
 # function run_multiple_times(A, C, population_size, generations, mutation_rate, crossover_rate, num_runs)
 #     results = Float64[]
 #     times = Float64[]
@@ -165,4 +167,19 @@ best_solution, best_val = genetic_algorithm(A, C, population_size, generations, 
 #     return min_value, max_value, mean_value, avg_time
 # end
 
-#run_multiple_times(A, C, population_size, generations, mutation_rate, crossover_rate, 10)
+# run_multiple_times(A, C, population_size, generations, mutation_rate, crossover_rate, 10)
+
+
+function experimentationSPP()
+    println("didactic", genetic_algorithm("../Data/didactic.dat"))
+    println("pb_100rnd0100", genetic_algorithm("../Data/pb_100rnd0100.dat"))
+    println("pb_100rnd0300", genetic_algorithm("../Data/pb_100rnd0300.dat"))
+    println("pb_200rnd0100", genetic_algorithm("../Data/pb_200rnd0100.dat"))
+    println("pb_200rnd0500", genetic_algorithm("../Data/pb_200rnd0500.dat"))
+    println("pb_500rnd0100", genetic_algorithm("../Data/pb_500rnd0100.dat"))
+    println("pb_500rnd0100", genetic_algorithm("../Data/pb_500rnd0100.dat"))
+    println("pb_500rnd1700", genetic_algorithm("../Data/pb_500rnd1700.dat"))
+    println("pb_1000rnd0100", genetic_algorithm("../Data/pb_1000rnd0100.dat"))
+    println("pb_1000rnd0200", genetic_algorithm("../Data/pb_1000rnd0200.dat"))
+    println("pb_2000rnd0100", genetic_algorithm("../Data/pb_2000rnd0100.dat"))
+end
