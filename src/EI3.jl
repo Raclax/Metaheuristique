@@ -2,9 +2,6 @@ using LinearAlgebra
 
 include("loadSPP.jl")
 include("EI2.jl")
-#fname = "../Data/pb_500rnd0100.dat"
-# C, A = loadSPP(fname)
-# m, n = size(A)
 
 
 function evaluate_population(population, C)
@@ -54,7 +51,7 @@ function mutation(enf, mutation_rate,C, A)
     
     chromosome = copy(enf)
     for i in eachindex(chromosome)
-        if rand() < mutation_rate #mutation_rate pas : il y a pas souvent de mutations 
+        if rand() < mutation_rate #mutation_rate pas important : il n'y a pas souvent de mutations 
             chromosome[i] = 1 - chromosome[i]
         end
     end
@@ -67,12 +64,12 @@ end
 function reparation(C,A,sol)
     m, n = size(A)
     utilite = map(i -> C[i] / sum(A[:, i]), 1:n)
-    u_idx=sortperm(utilite,rev=false)
+    u_idx=sortperm(utilite,rev=false)# indices des colonnes triées par utilité 
     for i=1:m
         if(!valideLigne(A,sol,i))
             for j in eachindex(sol)
-                if(A[i,u_idx[j]]==1 && sol[u_idx[j]]==1)
-                    sol[u_idx[j]]=0
+                if(A[i,u_idx[j]]==1 && sol[u_idx[j]]==1) # Vérifier si l'élément de la colonne j est 1 dans la ligne i et dans la solution
+                    sol[u_idx[j]]=0 # dans ce cas, l'élément de la colonne j est mis à 0
                     if(valideLigne(A,sol,i))
                         break
                     end
@@ -86,6 +83,7 @@ end
 # ----------------------------------------------------------------------------------------------------
 
 function valideLigne(A,sol,i)
+    # On ne regarde que si la nouvelle ligne ajoutée est valide, pas besoin de regarder pout toute la solution
     m, n = size(A)
     sum=0
     for j=1:n
@@ -136,38 +134,10 @@ function genetic_algorithm(fname, population_size = 200, generations = 50, mutat
 
 
     return best_solution, best_value
-    #return best_value
 
 end
 
 # ----------------------------------------------------------------------------------------------------
-
-# population_size = 200
-# generations = 50
-# mutation_rate = 0.01
-# crossover_rate = 0.9
-
-
-# best_solution, best_val = genetic_algorithm(A, C, population_size, generations, mutation_rate, crossover_rate)
-# function run_multiple_times(A, C, population_size, generations, mutation_rate, crossover_rate, num_runs)
-#     results = Float64[]
-#     times = Float64[]
-
-#     for _ in 1:num_runs
-#         elapsed_time = @elapsed best_value = genetic_algorithm(A, C, population_size, generations, mutation_rate, crossover_rate)
-#         push!(results, best_value)
-#         push!(times, elapsed_time)
-#     end
-
-#     min_value = minimum(results)
-#     max_value = maximum(results)
-#     mean_value = mean(results)
-#     avg_time = mean(times)
-
-#     return min_value, max_value, mean_value, avg_time
-# end
-
-# run_multiple_times(A, C, population_size, generations, mutation_rate, crossover_rate, 10)
 
 
 function experimentationSPP()
@@ -176,7 +146,7 @@ function experimentationSPP()
     println("pb_100rnd0300", genetic_algorithm("../Data/pb_100rnd0300.dat"))
     println("pb_200rnd0100", genetic_algorithm("../Data/pb_200rnd0100.dat"))
     println("pb_200rnd0500", genetic_algorithm("../Data/pb_200rnd0500.dat"))
-    println("pb_500rnd0100", genetic_algorithm("../Data/pb_500rnd0100.dat"))
+    println("pb_200rnd1600", genetic_algorithm("../Data/pb_200rnd1600.dat"))
     println("pb_500rnd0100", genetic_algorithm("../Data/pb_500rnd0100.dat"))
     println("pb_500rnd1700", genetic_algorithm("../Data/pb_500rnd1700.dat"))
     println("pb_1000rnd0100", genetic_algorithm("../Data/pb_1000rnd0100.dat"))

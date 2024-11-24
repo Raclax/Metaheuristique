@@ -54,6 +54,10 @@ Lorsqu'une fonction demande un fname, il faut la lancer avec le chemin d'une ins
  **main.jl**
   - solveGLPK(fname) : résoudre l'instance avec GLPK
 
+  **loadSPP.jl**
+  Ce fichier contient la fonction qui permet de charger l'instance de SPP qui est sous le format OR-library
+
+
 #### Ce qu'il faut pour les lancer
 **main.jl**
  - `using GLPK`

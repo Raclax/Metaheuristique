@@ -1,10 +1,6 @@
 include("loadSPP.jl")
 using LinearAlgebra
 
-# fname = "../Data/pb_100rnd0300.dat"
-# C, A = loadSPP(fname)
-# m, n = size(A)
-
 function utility(A, C, n)
     U = zeros(n)
     for i in 1:n
@@ -190,15 +186,15 @@ end
 
 
 function experimentationSPP()
-    println("didactic", resoudreSPP("../Data/didactic.dat"))
-    println("pb_100rnd0100", resoudreSPP("../Data/pb_100rnd0100.dat"))
-    println("pb_100rnd0300", resoudreSPP("../Data/pb_100rnd0300.dat"))
-    println("pb_200rnd0100", resoudreSPP("../Data/pb_200rnd0100.dat"))
-    println("pb_200rnd0500", resoudreSPP("../Data/pb_200rnd0500.dat"))
-    println("pb_500rnd0100", resoudreSPP("../Data/pb_500rnd0100.dat"))
-    println("pb_500rnd0100", resoudreSPP("../Data/pb_500rnd0100.dat"))
-    println("pb_500rnd1700", resoudreSPP("../Data/pb_500rnd1700.dat"))
-    println("pb_1000rnd0100", resoudreSPP("../Data/pb_1000rnd0100.dat"))
-    println("pb_1000rnd0200", resoudreSPP("../Data/pb_1000rnd0200.dat"))
-    println("pb_2000rnd0100", resoudreSPP("../Data/pb_2000rnd0100.dat"))
+    println("didactic", genetic_algorithm("../Data/didactic.dat"))
+    println("pb_100rnd0100", genetic_algorithm("../Data/pb_100rnd0100.dat"))
+    println("pb_100rnd0300", genetic_algorithm("../Data/pb_100rnd0300.dat"))
+    println("pb_200rnd0100", genetic_algorithm("../Data/pb_200rnd0100.dat"))
+    println("pb_200rnd0500", genetic_algorithm("../Data/pb_200rnd0500.dat"))
+    println("pb_200rnd1600", genetic_algorithm("../Data/pb_200rnd1600.dat"))
+    println("pb_500rnd0100", genetic_algorithm("../Data/pb_500rnd0100.dat"))
+    println("pb_500rnd1700", genetic_algorithm("../Data/pb_500rnd1700.dat"))
+    println("pb_1000rnd0100", genetic_algorithm("../Data/pb_1000rnd0100.dat"))
+    println("pb_1000rnd0200", genetic_algorithm("../Data/pb_1000rnd0200.dat"))
+    println("pb_2000rnd0100", genetic_algorithm("../Data/pb_2000rnd0100.dat"))
 end

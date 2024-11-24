@@ -5,13 +5,6 @@ using InvertedIndices
 using Distributions
 using StatsBase
 
-# using Statistics
-# using Dates
-
-# fname = "../Data/pb_100rnd0100.dat"
-# C, A = loadSPP(fname)
-# m, n = size(A)
-
 
 function grasp(fname, alpha=0.7, repeat=12)
     C, A = loadSPP(fname)
@@ -212,10 +205,8 @@ end
 
 function ReactiveGrasp(fname, m=10, maxIteration=85, Nalpha=15)  
     C, A = loadSPP(fname)
-    #m, n = size(A)
 
     pk = fill(1 / m, m) 
-    #println(pk)
     alpha_values = [(i - 1) / m for i in 1:m]
     n_alpha = zeros(Int, m)
 
@@ -274,42 +265,16 @@ function ReactiveGrasp(fname, m=10, maxIteration=85, Nalpha=15)
 
 end
 
-#s,v, a = ReactiveGrasp(A, C, 10,85,15)
-
-#grasp(A, C, 5, 10)
-
-
-# function run_reactivegrasp_multiple_times(A, C, alpha)
-#     valactuelle_values = []
-#     running_times = []
-
-#     for _ in 1:10
-#         elapsed_time = @elapsed _, valactuelle = grasp(A, C, alpha)
-#         push!(valactuelle_values, valactuelle)
-#         push!(running_times, elapsed_time)
-#     end
-
-#     max_valactuelle = maximum(valactuelle_values)
-#     min_valactuelle = minimum(valactuelle_values)
-#     mean_valactuelle = mean(valactuelle_values)
-#     mean_running_time = mean(running_times)
-
-#     return max_valactuelle, min_valactuelle, mean_valactuelle, mean_running_time
-# end
-
-
-# run_reactivegrasp_multiple_times(A, C, 0.7)
-
 function experimentationSPP()
-    println("didactic", ReactiveGrasp("../Data/didactic.dat"))
-    println("pb_100rnd0100", ReactiveGrasp("../Data/pb_100rnd0100.dat"))
-    println("pb_100rnd0300", ReactiveGrasp("../Data/pb_100rnd0300.dat"))
-    println("pb_200rnd0100", ReactiveGrasp("../Data/pb_200rnd0100.dat"))
-    println("pb_200rnd0500", ReactiveGrasp("../Data/pb_200rnd0500.dat"))
-    println("pb_500rnd0100", ReactiveGrasp("../Data/pb_500rnd0100.dat"))
-    println("pb_500rnd0100", ReactiveGrasp("../Data/pb_500rnd0100.dat"))
-    println("pb_500rnd1700", ReactiveGrasp("../Data/pb_500rnd1700.dat"))
-    println("pb_1000rnd0100", ReactiveGrasp("../Data/pb_1000rnd0100.dat"))
-    println("pb_1000rnd0200", ReactiveGrasp("../Data/pb_1000rnd0200.dat"))
-    println("pb_2000rnd0100", ReactiveGrasp("../Data/pb_2000rnd0100.dat"))
+    println("didactic", genetic_algorithm("../Data/didactic.dat"))
+    println("pb_100rnd0100", genetic_algorithm("../Data/pb_100rnd0100.dat"))
+    println("pb_100rnd0300", genetic_algorithm("../Data/pb_100rnd0300.dat"))
+    println("pb_200rnd0100", genetic_algorithm("../Data/pb_200rnd0100.dat"))
+    println("pb_200rnd0500", genetic_algorithm("../Data/pb_200rnd0500.dat"))
+    println("pb_200rnd1600", genetic_algorithm("../Data/pb_200rnd1600.dat"))
+    println("pb_500rnd0100", genetic_algorithm("../Data/pb_500rnd0100.dat"))
+    println("pb_500rnd1700", genetic_algorithm("../Data/pb_500rnd1700.dat"))
+    println("pb_1000rnd0100", genetic_algorithm("../Data/pb_1000rnd0100.dat"))
+    println("pb_1000rnd0200", genetic_algorithm("../Data/pb_1000rnd0200.dat"))
+    println("pb_2000rnd0100", genetic_algorithm("../Data/pb_2000rnd0100.dat"))
 end
