@@ -74,14 +74,23 @@ Lorsqu'une fonction demande un fname, il faut la lancer avec le chemin d'une ins
 **Spécifique à EI3.jl**
 - `include("EI2.jl")`
 
-
-
-
-
-
-- `loadSPP.jl` : lecture d'une instance de SPP au format OR-library
-- `setSPP.jl` : construction d'un modèle JuMP de SPP
-- `experiment.jl`: protocole pour mener une expérimentation numérique avec sorties graphiques
-
-
 ------
+
+## Exemples de lancement
+
+**EI1.jl**
+  - `greedy("../Data/pb_100rnd0100.dat")`
+  - `resoudreSPP("../Data/pb_100rnd0100.dat")`
+  - `experimentationSPP()`
+
+**EI2.jl**
+  - `grasp("../Data/pb_100rnd0100.dat")`
+  - `ReactiveGrasp("../Data/pb_100rnd0100.dat")`
+  - `experimentationSPP()`
+
+**EI3.jl**
+ -  `genetic_algorithm("../Data/pb_100rnd0100.dat")`
+ -  `experimentationSPP()`
+
+ **main.jl**
+  - `solveGLPK("../Data/pb_100rnd0100.dat")`
