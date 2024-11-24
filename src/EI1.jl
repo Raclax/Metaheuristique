@@ -1,7 +1,7 @@
 include("loadSPP.jl")
 using LinearAlgebra
 
-fname = "../Data/pb_200rnd0500.dat"
+fname = "../Data/pb_100rnd0300.dat"
 C, A = loadSPP(fname)
 m, n = size(A)
 

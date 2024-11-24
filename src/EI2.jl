@@ -8,7 +8,7 @@ using StatsBase
 using Statistics
 using Dates
 
-fname = "../Data/pb_200rnd0500.dat"
+fname = "../Data/pb_100rnd0300.dat"
 C, A = loadSPP(fname)
 m, n = size(A)
 
@@ -20,7 +20,7 @@ function grasp(A, C, alpha, repeat=12)
     for i in 1:repeat
         S = grconst(A, C, alpha)
         v = z(S, C)
-        #S, v = deepest_d(S) # construction et amélioration d'une solution
+        S, v = deepest_d(S) # amélioration, peut être évitée pour améliorer le CPUt
         
         if v > best_valeur
             best = S
@@ -272,29 +272,23 @@ end
 #grasp(A, C, 5, 10)
 
 
-function run_reactivegrasp_multiple_times(A, C, population_size, iterations, Nalpha)
+function run_reactivegrasp_multiple_times(A, C, alpha)
     valactuelle_values = []
-    #running_times = []
-    alpha_values = []
+    running_times = []
 
     for _ in 1:10
-        #start_time = now()
-        _, valactuelle, alpha = ReactiveGrasp(A, C, population_size, iterations, Nalpha)
-        #end_time = now()
-        
+        elapsed_time = @elapsed _, valactuelle = grasp(A, C, alpha)
         push!(valactuelle_values, valactuelle)
-        #push!(running_times, end_time - start_time)
-        push!(alpha_values, alpha)
+        push!(running_times, elapsed_time)
     end
 
     max_valactuelle = maximum(valactuelle_values)
     min_valactuelle = minimum(valactuelle_values)
     mean_valactuelle = mean(valactuelle_values)
-    #mean_running_time = mean(running_times)
-    mean_alpha = mean(alpha_values)
+    mean_running_time = mean(running_times)
 
-
-    return max_valactuelle, min_valactuelle, mean_valactuelle, mean_alpha
+    return max_valactuelle, min_valactuelle, mean_valactuelle, mean_running_time
 end
 
-run_reactivegrasp_multiple_times(A, C, 10, 85, 15)
+
+run_reactivegrasp_multiple_times(A, C, 0.7)

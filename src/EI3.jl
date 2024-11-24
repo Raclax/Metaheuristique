@@ -2,7 +2,7 @@ using LinearAlgebra
 
 include("loadSPP.jl")
 include("EI2.jl")
-fname = "../Data/pb_100rnd0100.dat"
+fname = "../Data/pb_200rnd0100.dat"
 C, A = loadSPP(fname)
 m, n = size(A)
 
@@ -134,14 +134,35 @@ function genetic_algorithm(A, C, population_size, generations, mutation_rate, cr
 
 
     return best_solution, best_value
+    #return best_value
+
 end
 
 # ----------------------------------------------------------------------------------------------------
 
 population_size = 10
-generations = 100
+generations = 10
 mutation_rate = 0.01
 crossover_rate = 0.9
 
 
-best_solution, best_value = genetic_algorithm(A, C, population_size, generations, mutation_rate, crossover_rate)
+best_solution, best_val = genetic_algorithm(A, C, population_size, generations, mutation_rate, crossover_rate)
+# function run_multiple_times(A, C, population_size, generations, mutation_rate, crossover_rate, num_runs)
+#     results = Float64[]
+#     times = Float64[]
+
+#     for _ in 1:num_runs
+#         elapsed_time = @elapsed best_value = genetic_algorithm(A, C, population_size, generations, mutation_rate, crossover_rate)
+#         push!(results, best_value)
+#         push!(times, elapsed_time)
+#     end
+
+#     min_value = minimum(results)
+#     max_value = maximum(results)
+#     mean_value = mean(results)
+#     avg_time = mean(times)
+
+#     return min_value, max_value, mean_value, avg_time
+# end
+
+#run_multiple_times(A, C, population_size, generations, mutation_rate, crossover_rate, 10)
